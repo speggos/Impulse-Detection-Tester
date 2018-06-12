@@ -13,7 +13,7 @@ const audioThreshold = 5;
 
 const buffersToRead = 16;
 
-function detectPeak(waveData) {
+function detectImpulse(waveData) {
 
     let recursiveAverage = -1;
     let peakDetectedIndex = -1;
@@ -79,7 +79,7 @@ async function test() {
             .then((data) => {
                 const audioData = combineArrays(data.channelData[0], data.channelData[1]);
 
-                if (detectPeak(audioData)) {
+                if (detectImpulse(audioData)) {
                     successfulTests.push(file);
                 } else {
                     unsuccessfulTests.push(file);
