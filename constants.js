@@ -5,14 +5,14 @@ const plotlyAPIKey = "w2yFmEomigwcPbLUtv9T";
 const bufferSize = 1024;
 
 // For recursive average calculation
-const beta = 0.75;
+const beta = 0.65;
 
 // How much "larger" a period of time has to be to trigger the peak detection algorithm
-const audioThreshold = 3;
+const audioThreshold = 1.5;
 
 // How "loud" randomly generated noise is compared to average of sample
 const noiseConstant = 0.1;
-const buffersToRead = 16;
+const buffersToRead = 8;
 
 
 module.exports = {

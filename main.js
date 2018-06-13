@@ -1,5 +1,4 @@
 const fs = require('fs');
-const WaveDecoder = require('wav-decoder');
 const helpers = require('./helpers');
 const detectionAlgorithms =require('./detectionAlgorithms');
 
@@ -21,26 +20,22 @@ async function test() {
             continue;
         }
 
-        let res = fs.readFileSync('./samples/' + file);
+        promiseIstance = helpers.decodeAudioFile('./samples/' + file, (data) => {
 
-        promiseIstance = WaveDecoder.decode(res)
-        // channelData is (# of channels) arrays of signed decimals
-            .then((data) => {
+            const audioData = helpers.combineArrays(data.channelData[0], data.channelData[1]);
 
-                const audioData = helpers.combineArrays(data.channelData[0], data.channelData[1]);
+            const decimatedData = helpers.decimateByN(audioData);
 
-                const decimatedData = helpers.decimateByN(audioData);
+            const dataWithNoiseBefore = helpers.addNoiseToFront(audioData);
 
-                const dataWithNoiseBefore = helpers.addNoiseToFront(audioData);
+            const noisyData = helpers.addNoise(audioData);
 
-                const noisyData = helpers.addNoise(audioData);
-
-                if (detectionAlgorithms.detectImpulseMA(decimatedData)) {
-                    successfulTests.push(file);
-                } else {
-                    unsuccessfulTests.push(file);
-                }
-            });
+            if (detectionAlgorithms.detectImpulseMA(decimatedData)) {
+                successfulTests.push(file);
+            } else {
+                unsuccessfulTests.push(file);
+            }
+        });
 
         allPromises.push(promiseIstance);
 

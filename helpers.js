@@ -1,4 +1,8 @@
 const constants = require('./constants');
+const fs = require('fs');
+const WaveDecoder = require('wav-decoder');
+
+
 // Iteratively add each element of array1 and array2 into a resulting array. Both arrays must be of equal length
 function combineArrays(array1, array2) {
 
@@ -81,6 +85,18 @@ function decimateByN(array, n = 2) {
 
 }
 
+// Pass relative path to file. Returns a promise
+function decodeAudioFile(path, cb) {
+
+    const file = fs.readFileSync(path);
+
+    return WaveDecoder.decode(file).then(cb);
+}
+
+function updateRecursiveAverage(oldRA, currentBufferTotal, beta) {
+    return beta * oldRA + (1-beta) * currentBufferTotal;
+}
+
 // Initialize with how many buffers it should read in total
 class PotentialPeak {
 
@@ -152,6 +168,8 @@ module.exports = {
     getAverage,
     getSumOfSquares,
     decimateByN,
+    decodeAudioFile,
+    updateRecursiveAverage,
     PotentialPeak,
     Test
 };
