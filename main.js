@@ -1,17 +1,17 @@
 const fs = require('fs');
-const FileReader = require('filereader');
 const WaveDecoder = require('wav-decoder');
+const helpers = require('./helpers');
 
 //TODO get bufferSize
 const bufferSize = 1024;
 
 // Time constant
-const beta = 0.98;
+const beta = 0.85;
 
 // How much "larger" a period of time has to be to trigger the peak detection algorithm
-const audioThreshold = 5;
-
+const audioThreshold = 3;
 const buffersToRead = 16;
+
 
 function detectImpulse(waveData) {
 
@@ -22,12 +22,8 @@ function detectImpulse(waveData) {
 
     for (let i=0; i< Math.floor(waveData.length / bufferSize); i++) {
 
-        currentBufferTotal = 0;
-
-        // Get "Noise" of buffer
-        for (let j=0; j<bufferSize; j++) {
-            currentBufferTotal += Math.abs(waveData[i * bufferSize + j])
-        }
+        // Get sum of squares for indexes from i*bufferSize to (i+1)*bufferSize
+        currentBufferTotal = helpers.getSumOfSquares(waveData.slice(i*bufferSize, i*bufferSize + bufferSize));
 
         // First Iteration
         if (recursiveAverage === -1) {
@@ -55,6 +51,69 @@ function detectImpulse(waveData) {
     return false;
 }
 
+function detectImpulseMA(waveData) {
+
+    let recursiveAverage = -1;
+    let potentialPeaks = [];
+    let currentBufferTotal;
+
+
+    for (let i=0; i< Math.floor(waveData.length / bufferSize); i++) {
+
+        // Get sum of squares for indexes from i*bufferSize to (i+1)*bufferSize
+        currentBufferTotal = helpers.getSumOfSquares(waveData.slice(i*bufferSize, i*bufferSize + bufferSize));
+
+        // First Iteration
+        if (recursiveAverage === -1) {
+
+            recursiveAverage = currentBufferTotal;
+
+        } else  {
+
+            recursiveAverage = beta * recursiveAverage + (1-beta) * currentBufferTotal;
+
+            let currPeak;
+            // Loop through each potential peak
+            for (let j=potentialPeaks.length - 1; j >= 0; j--) {
+
+                currPeak = potentialPeaks[j];
+
+                // If the potentialPeak finished being analyzed
+                if (currPeak.getRemaining() === 0) {
+
+                    // Where we confirm a peak. If there were more buffers below MA than above
+                    if (currPeak.getBelowMA() - currPeak.getAboveMA() > 0) {
+                        return true
+                    }
+
+                    potentialPeaks.pop();
+
+                //Update the potentialPeak
+                } else {
+
+                    // If they are equal, incrementing belowMA
+                    if (currentBufferTotal - recursiveAverage > 0) {
+                        currPeak.incAboveMA();
+                    } else {
+                        currPeak.incBelowMA();
+                    }
+                    currPeak.decRemaining();
+
+                }
+            }
+
+            if (currentBufferTotal > recursiveAverage * audioThreshold) {
+                potentialPeaks.push(new helpers.PotentialPeak(buffersToRead));
+            }
+
+
+        }
+    }
+
+    return false;
+}
+
+
 async function test() {
 
     const files = fs.readdirSync('./samples');
@@ -77,41 +136,31 @@ async function test() {
         promiseIstance = WaveDecoder.decode(res)
         // channelData is (# of channels) arrays of signed decimals
             .then((data) => {
-                const audioData = combineArrays(data.channelData[0], data.channelData[1]);
 
-                if (detectImpulse(audioData)) {
+                const audioData = helpers.combineArrays(data.channelData[0], data.channelData[1]);
+
+                const dataWithNoiseBefore = helpers.addNoiseToFront(audioData);
+
+                const noisyData = helpers.addNoise(audioData);
+
+                if (detectImpulseMA(audioData)) {
                     successfulTests.push(file);
                 } else {
                     unsuccessfulTests.push(file);
                 }
-            });
+                });
 
         allPromises.push(promiseIstance);
 
     }
 
+    // Wait for all promises to complete before outputting results
     await Promise.all(allPromises)
         .then(()=>{
             console.log("Correct: " + successfulTests.length);
             console.log("Incorrect: " + unsuccessfulTests.length);
         })
 
-}
-
-function combineArrays(array1, array2) {
-
-    if (array1.length !== array2.length) {
-        console.log('Error: Arrays not of equal length');
-        return []
-    }
-
-    let combinedArray = [];
-
-    for (let i=0; i<array1.length; i++) {
-        combinedArray.push(array1[i] + array2[i])
-    }
-
-    return combinedArray;
 }
 
 test();
