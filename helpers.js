@@ -1,6 +1,4 @@
-// How strong the noise of a signal is compared to the average amplitude of the signal; 0<noiseConstant<1
-const noiseConstant = 0.1;
-
+const constants = require('./constants');
 // Iteratively add each element of array1 and array2 into a resulting array. Both arrays must be of equal length
 function combineArrays(array1, array2) {
 
@@ -26,7 +24,7 @@ function addNoise(inputArray) {
     const averageAmpOfLastThird = getAverage(lastThirdOfArray);
 
     const noisyArray = inputArray.map((index) => {
-        return index + (Math.random() * averageAmpOfLastThird * 2 - 1) * noiseConstant
+        return index + (Math.random() * averageAmpOfLastThird * 2 - 1) * constants.noiseConstant
     });
 
     return noisyArray;
@@ -40,7 +38,7 @@ function addNoiseToFront(inputArray) {
     const noiseArray = [];
 
     for (let i=0; i<inputArray.length; i++) {
-        noiseArray.push( (Math.random() * 2 - 1) * averageOfLastThird * noiseConstant);
+        noiseArray.push( (Math.random() * 2 - 1) * averageOfLastThird * constants.noiseConstant);
     }
 
     return noiseArray.concat(inputArray);
