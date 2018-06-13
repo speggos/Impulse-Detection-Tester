@@ -1,6 +1,7 @@
 // How strong the noise of a signal is compared to the average amplitude of the signal; 0<noiseConstant<1
 const noiseConstant = 0.1;
 
+// Iteratively add each element of array1 and array2 into a resulting array. Both arrays must be of equal length
 function combineArrays(array1, array2) {
 
     if (array1.length !== array2.length) {
@@ -17,6 +18,7 @@ function combineArrays(array1, array2) {
     return combinedArray;
 }
 
+// This function doesn't work very well. Relies on noiseConstant
 function addNoise(inputArray) {
 
     const lastThirdOfArray = inputArray.slice(inputArray.length*2/3, inputArray.length);
@@ -30,7 +32,7 @@ function addNoise(inputArray) {
     return noisyArray;
 }
 
-
+// This function doesn't work very well. Relies on noiseConstant
 function addNoiseToFront(inputArray) {
 
     const averageOfLastThird = getAverage(inputArray.slice(inputArray.length*2/3, inputArray.length));
@@ -66,6 +68,19 @@ function getSumOfSquares(array) {
     });
 
     return Math.sqrt(total);
+}
+
+// Returns an array decimated by a factor of N
+function decimateByN(array, n = 2) {
+
+    let decimatedArray = [];
+
+    for (let i=0; i < array.length/n; i++) {
+        decimatedArray.push(array[n*i])
+    }
+
+    return decimatedArray;
+
 }
 
 // Initialize with how many buffers it should read in total
@@ -138,6 +153,7 @@ module.exports = {
     addNoiseToFront,
     getAverage,
     getSumOfSquares,
+    decimateByN,
     PotentialPeak,
     Test
 };
