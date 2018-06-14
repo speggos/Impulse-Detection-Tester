@@ -13,7 +13,6 @@ function detectImpulseOriginal(waveData, beta, audioThreshold, buffersToRead) {
 
     for (let i=0; i< Math.floor(waveData.length / constants.bufferSize); i++) {
 
-        // Get sum of squares for indexes from i*bufferSize to (i+1)*bufferSize
         currentBufferTotal = helpers.getSumOfSquares(waveData.slice(i*constants.bufferSize, (i+1)*constants.bufferSize));
 
         // First Iteration
@@ -28,14 +27,15 @@ function detectImpulseOriginal(waveData, beta, audioThreshold, buffersToRead) {
 
         } else {
 
-            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage,currentBufferTotal, beta);
-
             // How peaks are detected
             if (peakDetectedIndex === -1 && currentBufferTotal > audioThreshold * recursiveAverage) {
 
                 peakDetectedIndex = i;
                 recursiveAverageAtPeakDetection = recursiveAverage;
             }
+
+            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage,currentBufferTotal, beta);
+
         }
     }
 
@@ -61,8 +61,6 @@ function detectImpulseMA(waveData, beta, audioThreshold, buffersToRead) {
             recursiveAverage = currentBufferTotal;
 
         } else  {
-
-            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage, currentBufferTotal, beta);
 
             let currPeak;
             // Loop through each potential peak
@@ -96,6 +94,9 @@ function detectImpulseMA(waveData, beta, audioThreshold, buffersToRead) {
             if (currentBufferTotal > recursiveAverage * audioThreshold) {
                 potentialPeaks.push(new helpers.PotentialPeak(buffersToRead));
             }
+
+            // Update RA after checking for a peak
+            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage, currentBufferTotal, beta);
 
 
         }

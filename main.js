@@ -4,7 +4,7 @@ const detectionAlgorithms =require('./detectionAlgorithms');
 const constants = require('./constants');
 
 const tests = [
-    new helpers.Test("Undefined Vars", detectionAlgorithms.detectImpulseMA, './samples/', undefined, undefined, undefined),
+    new helpers.Test("Undefined Vars", detectionAlgorithms.detectImpulseMA, './samples/', undefined, undefined, undefined, undefined),
     new helpers.Test("Defined", detectionAlgorithms.detectImpulseMA, './samples/', constants.beta, constants.audioThreshold, constants.buffersToRead)
 ];
 
