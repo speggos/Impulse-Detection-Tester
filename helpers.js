@@ -132,34 +132,40 @@ class PotentialPeak {
 }
 
 class Test {
-    constructor(detectionAlg, data, beta=0.9, audioThreshold=3, buffersToRead = 16, minPercentToReject = .5) {
+    constructor(name, detectionAlg, dataPath, beta=constants.beta, audioThreshold=constants.audioThreshold, buffersToRead = constants.buffersToRead) {
+        this.name = name;
         this.detectionAlg = detectionAlg;
-        this.data = data;
+        this.dataPath = dataPath;
         this.beta = beta;
-        this.audioThreshold = buffersToRead;
-        this.minPercentToReject = minPercentToReject;
+        this.audioThreshold = audioThreshold;
+        this.buffersToRead = buffersToRead;
     }
 
-    get detectionAlg() {
+    getName() {
+        return this.name;
+    }
+
+    getDetectionAlg() {
         return this.detectionAlg;
     }
 
-    get data() {
-        return this.data;
+    getDataPath() {
+        return this.dataPath;
     }
 
-    get beta() {
+    getBeta() {
         return this.beta;
     }
 
-    get audioThreshold() {
+    getAudioThreshold() {
         return this.audioThreshold;
     }
 
-    get minPercentToReject() {
-        return this.minPercentToReject;
+    getBuffersToRead() {
+        return this.buffersToRead;
     }
 }
+
 
 module.exports = {
     combineArrays,

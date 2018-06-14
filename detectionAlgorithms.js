@@ -1,8 +1,10 @@
 const helpers = require('./helpers');
 const constants = require('./constants');
 
+// Each detection algorithm must take the same data, in the same order. See other algorithms for the current data
+
 // Detect peak, (buffersToRead) buffers later check if the signal is half of audiothreshold or less
-function detectImpulseOriginal(waveData) {
+function detectImpulseOriginal(waveData, beta, audioThreshold, buffersToRead) {
 
     let recursiveAverage = -1;
     let peakDetectedIndex = -1;
@@ -20,16 +22,16 @@ function detectImpulseOriginal(waveData) {
             recursiveAverage = currentBufferTotal;
 
             // If we are at the end of the file, or
-        } else if (i === waveData.length - 1 || i === peakDetectedIndex + constants.buffersToRead) {
+        } else if (i === waveData.length - 1 || i === peakDetectedIndex + buffersToRead) {
 
-            return currentBufferTotal < (constants.audioThreshold / 2) * recursiveAverageAtPeakDetection
+            return currentBufferTotal < (audioThreshold / 2) * recursiveAverageAtPeakDetection
 
         } else {
 
-            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage,currentBufferTotal, constants.beta);
+            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage,currentBufferTotal, beta);
 
             // How peaks are detected
-            if (peakDetectedIndex === -1 && currentBufferTotal > constants.audioThreshold * recursiveAverage) {
+            if (peakDetectedIndex === -1 && currentBufferTotal > audioThreshold * recursiveAverage) {
 
                 peakDetectedIndex = i;
                 recursiveAverageAtPeakDetection = recursiveAverage;
@@ -41,7 +43,7 @@ function detectImpulseOriginal(waveData) {
 }
 
 // Detect peak, keep updating MA and adding new potential peaks. Each iteration check if MA is below/above current
-function detectImpulseMA(waveData) {
+function detectImpulseMA(waveData, beta, audioThreshold, buffersToRead) {
 
     let recursiveAverage = -1;
     let potentialPeaks = [];
@@ -60,7 +62,7 @@ function detectImpulseMA(waveData) {
 
         } else  {
 
-            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage,currentBufferTotal, constants.beta);
+            recursiveAverage = helpers.updateRecursiveAverage(recursiveAverage, currentBufferTotal, beta);
 
             let currPeak;
             // Loop through each potential peak
@@ -73,13 +75,11 @@ function detectImpulseMA(waveData) {
 
                     // Where we confirm a peak. If there were more buffers below MA than above
                     if (currPeak.getBelowMA() - currPeak.getAboveMA() > 0) {
-                        console.log("Peak Accepted!")
                         return true
                     }
-                    console.log("Peak Rejected!")
                     potentialPeaks.pop();
 
-                    //Update the potentialPeak
+                //Update the potentialPeak
                 } else {
 
                     // If they are equal, incrementing belowMA
@@ -93,9 +93,8 @@ function detectImpulseMA(waveData) {
                 }
             }
 
-            if (currentBufferTotal > recursiveAverage * constants.audioThreshold) {
-                console.log("Found Peak!", i, currentBufferTotal, recursiveAverage);
-                potentialPeaks.push(new helpers.PotentialPeak(constants.buffersToRead));
+            if (currentBufferTotal > recursiveAverage * audioThreshold) {
+                potentialPeaks.push(new helpers.PotentialPeak(buffersToRead));
             }
 
 
